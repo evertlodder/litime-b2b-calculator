@@ -252,12 +252,12 @@ function update(){
   var totalKwh=((sysV*totalAh)/1000).toFixed(2);
   var totalPrice=batt.price*S*P;
   var sFuse=fuseSize(stringA),mFuse=fuseSize(totalA);
-  // Busbar→BMS: stroom per string (stringA), BMS→Last: gecombineerde stroom (totalA)
+  // Busbar→BMS: totalA (busbar combineert alle strings), BMS→Last: totalA
   var totalLen=distBMS+distLoad;
   var dropBMS=totalLen>0?maxDrop*(distBMS/totalLen):maxDrop/2;
   var dropLoad=totalLen>0?maxDrop*(distLoad/totalLen):maxDrop/2;
-  var cStr=calcCable(stringA,distBMS,tempC,sysV,dropBMS);
-  var cMain=calcCable(totalA,distLoad,tempC,sysV,dropLoad);
+  var cStr=calcCable(totalA,distBMS,tempC,sysV,dropBMS);   // busbar->BMS: gecombineerde stroom
+  var cMain=calcCable(totalA,distLoad,tempC,sysV,dropLoad); // BMS->Last: gecombineerde stroom
   var totDV=+(cStr.dropV+cMain.dropV).toFixed(3);
   var totDP=+((totDV/sysV)*100).toFixed(2);
   var dropOk=totDP<=maxDrop;
@@ -287,7 +287,7 @@ function update(){
   else wb.classList.add("hidden");
 
   var rows=[
-    {run:"Busbar \u2192 BMS ("+fmtDist(distBMS)+")",cable:cStr,fuse:sFuse+"A"},
+    {run:"Busbar \u2192 BMS ("+fmtDist(distBMS)+")",cable:cStr,fuse:mFuse+"A"},
     {run:"BMS \u2192 Last ("+fmtDist(distLoad)+")",cable:cMain,fuse:mFuse+"A"}
   ];
   var cTbl=document.getElementById("cableTbl");
@@ -555,8 +555,8 @@ function renderInkoop(){
 
   // Definieer alle kabelruns als losse entries — rood en blauw altijd gescheiden
   var runs=[
-    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:P, note:"per string"},
-    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:P, note:"per string"},
+    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:1, note:"busbar \u2192 BMS"},
+    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:1, note:"busbar \u2192 BMS"},
     {label:"BMS \u2192 Last",     color:"rood",  cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"},
     {label:"BMS \u2192 Last",     color:"blauw", cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"}
   ];
