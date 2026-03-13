@@ -196,7 +196,7 @@ function init(){
     b.onclick=function(){S=n;document.querySelectorAll("#sBtns .btn").forEach(function(x){x.className="btn";});b.className="btn aa";update();};
     document.getElementById("sBtns").appendChild(b);
   });
-  [1,2,3,4,6,8].forEach(function(n){
+  [1,2,3,4].forEach(function(n){
     var b=document.createElement("button");
     b.className="btn"+(n===1?" ap":"");
     b.textContent=n+"P";
@@ -237,8 +237,12 @@ function update(){
   var totalKwh=((sysV*totalAh)/1000).toFixed(2);
   var totalPrice=batt.price*S*P;
   var sFuse=fuseSize(stringA),mFuse=fuseSize(totalA);
-  var cStr=calcCable(totalA,distBMS,tempC,sysV,maxDrop);
-  var cMain=calcCable(totalA,distLoad,tempC,sysV,maxDrop);
+  // Verdeel drop-budget proportioneel op basis van kabellengte
+  var totalLen=distBMS+distLoad;
+  var dropBMS=totalLen>0?maxDrop*(distBMS/totalLen):maxDrop/2;
+  var dropLoad=totalLen>0?maxDrop*(distLoad/totalLen):maxDrop/2;
+  var cStr=calcCable(totalA,distBMS,tempC,sysV,dropBMS);
+  var cMain=calcCable(totalA,distLoad,tempC,sysV,dropLoad);
   var totDV=+(cStr.dropV+cMain.dropV).toFixed(3);
   var totDP=+((totDV/sysV)*100).toFixed(2);
   var dropOk=totDP<=maxDrop;
