@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiTime B2B Systeem Calculator — Greenspark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #1D8348; --accent-light: #E8F5EC; --accent-hover: #166B3A;
+  --primary: #1E3A2F; --primary-light: #264A3B;
+  --gold: #D4AC0D; --gold-light: #FDF8E8;
+  --bg: #F2F0EC; --card: #FFFFFF;
+  --border: #DDD9D3; --border-light: #ECEAE6;
+  --text: #1A1A1A; --text-sec: #5C5C5C; --text-muted: #8C8C8C;
+  --red: #dc2626; --blue: #2563eb;
+  --amber: #f59e0b; --amber-dark: #92400e;
+  --green: #16a34a; --green-light: #dcfce7; --green-dark: #166534;
+}
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.header { background: var(--primary); color: white; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.header-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
+.header-logo span { color: #4ade80; }
+.header-sub { font-size: 0.75rem; color: #86efac; font-family: 'DM Mono', monospace; margin-top: 2px; }
+.header-badge { background: #166B3A; color: #4ade80; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; font-family: 'DM Mono', monospace; }
+.container { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.section-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Mono', monospace; }
+select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 14px; color: var(--text); background: var(--card); font-family: 'DM Sans', sans-serif; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235C5C5C' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn-group { display: flex; gap: 6px; }
+.btn { flex: 1; padding: 9px 6px; border-radius: 7px; border: 1.5px solid var(--border); cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif; background: #fafaf8; color: var(--text-muted); transition: all 0.12s; line-height: 1.3; text-align: center; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.active-accent { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.btn.active-primary { border-color: var(--primary); background: #E8F0EC; color: var(--primary); }
+.btn-sub { display: block; font-size: 10px; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 0.85rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border-top-width: 3px; }
+.stat-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; font-family: 'DM Mono', monospace; }
+.stat-val { font-size: 22px; font-weight: 800; color: var(--text); }
+.tab-bar { display: flex; gap: 4px; }
+.tab { padding: 8px 18px; border-radius: 7px 7px 0 0; border: 1px solid var(--border); border-bottom: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: #f4f2ee; color: var(--text-muted); margin-bottom: -1px; position: relative; z-index: 0; }
+.tab.active { background: var(--card); color: var(--text); z-index: 1; border-bottom: 1px solid var(--card); }
+.tab-panel { background: var(--card); border: 1px solid var(--border); border-radius: 0 9px 9px 9px; padding: 1.25rem; }
+.hidden { display: none !important; }
+.info-strip { padding: 7px 12px; background: var(--accent-light); border-radius: 6px; font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; display: flex; justify-content: space-between; margin-top: 0.75rem; }
+.warn-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; color: var(--amber-dark); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+.price-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; margin-bottom: 0.75rem; }
+.price-label { font-size: 13px; color: var(--text-sec); }
+.price-val { color: var(--accent); font-weight: 800; font-size: 15px; }
+.export-btn { padding: 7px 16px; border-radius: 7px; border: 1.5px solid var(--accent); background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.export-btn:hover { background: var(--accent); color: white; }
+.cable-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cable-table th { padding: 8px 10px; text-align: left; color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid var(--border); }
+.cable-table td { padding: 10px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+.badge { padding: 3px 9px; border-radius: 4px; font-size: 10px; font-weight: 800; font-family: 'DM Mono', monospace; }
+.badge-ok { background: var(--accent-light); color: var(--accent); }
+.badge-warn { background: #fef2f2; color: #991b1b; }
+.badge-reason { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+.drop-summary { margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 7px; display: flex; justify-content: space-between; align-items: center; }
+.drop-ok { background: var(--accent-light); border: 1px solid #a7f3d0; }
+.drop-bad { background: #fef2f2; border: 1px solid #fca5a5; }
+.drop-label { font-size: 13px; font-weight: 700; }
+.drop-badge { padding: 4px 14px; border-radius: 4px; font-size: 12px; font-weight: 800; color: white; }
+.footer-note { margin-top: 0.75rem; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-light); padding-top: 0.75rem; font-family: 'DM Mono', monospace; }
+.cta-box { margin-top: 1.5rem; background: var(--primary); color: white; border-radius: 10px; padding: 1.5rem; text-align: center; }
+.cta-box h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; }
+.cta-box p { font-size: 13px; color: #86efac; margin-bottom: 1rem; }
+.cta-btn { display: inline-block; background: #4ade80; color: var(--primary); font-weight: 800; padding: 10px 24px; border-radius: 7px; text-decoration: none; font-size: 14px; }
+.greenspark-footer { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 12px; font-family: 'DM Mono', monospace; }
+@media (max-width: 600px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-5 { grid-template-columns: repeat(3, 1fr); }
+  .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-logo">Green<span>spark</span> × LiTime</div>
+    <div class="header-sub">B2B Systeem Calculator — exclusief voor zakelijke klanten</div>
+  </div>
+  <div class="header-badge">B2B PORTAAL</div>
+</div>
+
+<div class="container">
+
+  <!-- Config card -->
+  <div class="card">
+    <div style="margin-bottom:1rem">
+      <label class="section-label">Accumodel (LiTime)</label>
+      <select id="battSelect" onchange="update()"></select>
+    </div>
+    <div class="grid-2" style="margin-bottom:1rem">
+      <div>
+        <label class="section-label">Serie (S) — Spanning</label>
+        <div class="btn-group" id="sButtons"></div>
+      </div>
+      <div>
+        <label class="section-label">Parallel (P) — Capaciteit</label>
+        <div class="btn-group" id="pButtons"></div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div>
+        <label class="section-label" id="dropLabel">Max kabelverlies — 3%</label>
+        <div class="btn-group" id="dropButtons"></div>
+      </div>
+      <div>
+        <label class="section-label" id="tempLabel">Omgevingstemperatuur — 25°C</label>
+        <input type="range" id="tempSlider" min="-10" max="60" step="5" value="25"
+          style="width:100%;margin-top:4px;accent-color:var(--accent)" oninput="update()">
+      </div>
+      <div>
+        <label class="section-label">Weergave</label>
+        <div class="btn-group">
+          <button class="btn active-primary" onclick="setUnits('metric',this)">Metrisch</button>
+          <button class="btn" onclick="setUnits('imperial',this)">Imperial</button>
+        </div>
+      </div>
+    </div>
+    <div class="info-strip" id="infoStrip"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid-5" style="margin-bottom:0.75rem" id="statsGrid"></div>
+
+  <!-- Price + export -->
+  <div class="card price-bar">
+    <span class="price-label" id="priceLabel"></span>
+    <button class="export-btn" onclick="exportPDF()">📄 Exporteer rapport</button>
+  </div>
+
+  <!-- Warning -->
+  <div class="warn-box hidden" id="warnBox">
+    <span style="font-size:18px">⚠️</span>
+    <span id="warnText"></span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="setTab(0,this)">Bedradingsschema</button>
+    <button class="tab" onclick="setTab(1,this)">Kabeladvies</button>
+    <button class="tab" onclick="setTab(2,this)">Offerte aanvragen</button>
+  </div>
+
+  <!-- Tab 0: Wiring diagram -->
+  <div class="tab-panel" id="tab0">
+    <div id="diagramContainer" style="overflow:auto"></div>
+  </div>
+
+  <!-- Tab 1: Cable advice -->
+  <div class="tab-panel hidden" id="tab1">
+    <table class="cable-table">
+      <thead>
+        <tr>
+          <th>Verbinding</th><th>Stroom</th><th>Doorsnede</th><th>Max (A)</th><th>AWG</th><th>Spanning val</th><th>Bepaald door</th><th>Zekering</th>
+        </tr>
+      </thead>
+      <tbody id="cableTableBody"></tbody>
+    </table>
+    <div class="drop-summary" id="dropSummary"></div>
+    <p class="footer-note" id="footerNote"></p>
+  </div>
+
+  <!-- Tab 2: Quote -->
+  <div class="tab-panel hidden" id="tab2">
+    <div style="font-size:14px;color:var(--text-sec);margin-bottom:1rem;line-height:1.6">
+      Vul uw contactgegevens in en wij sturen u een vrijblijvende offerte op maat. Vermeld uw gewenste configuratie en eventuele specifieke eisen (installatie, garantie, levering).
+    </div>
+    <div class="grid-2" style="gap:0.75rem;margin-bottom:0.75rem">
+      <div><label class="section-label">Bedrijfsnaam</label><input type="text" id="qBedrijf" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:DM Sans,sans-serif"></div>
+      <div><label class="section-label">Contactpersoon</label><input type="text" id="qNaam" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:DM Sans,sans-serif"></div>
+      <div><label class="section-label">E-mailadres</label><input type="email" id="qEmail" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:DM Sans,sans-serif"></div>
+      <div><label class="section-label">Telefoonnummer</label><input type="tel" id="qTel" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:DM Sans,sans-serif"></div>
+    </div>
+    <div style="margin-bottom:0.75rem"><label class="section-label">Aanvullende informatie</label><textarea id="qOpmerking" rows="3" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:14px;font-family:DM Sans,sans-serif;resize:vertical"></textarea></div>
+    <div id="quoteConfig" style="background:var(--accent-light);border-radius:7px;padding:0.75rem 1rem;font-size:12px;font-family:DM Mono,monospace;color:var(--accent);margin-bottom:1rem"></div>
+    <a id="quoteMailto" href="#" style="display:inline-block;background:var(--accent);color:white;font-weight:800;padding:11px 24px;border-radius:7px;text-decoration:none;font-size:14px;font-family:DM Sans,sans-serif" onclick="return buildMailto()">
+      📧 Offerte aanvragen via e-mail
+    </a>
+  </div>
+
+</div>
+
+<div class="greenspark-footer">
+  Greenspark B2B Calculator · info@greenspark.nl · +31 (0)20 123 4567<br>
+  LiTime batterijen worden drop-ship geleverd vanuit Duitsland · excl. BTW tenzij anders vermeld
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const CATALOG = [
+  { id:"lt-12-50",   label:"LiTime 12V 50Ah",    ah:50,  bmsA:60,  nomV:12.8, price:136 },
+  { id:"lt-12-100",  label:"LiTime 12V 100Ah",   ah:100, bmsA:100, nomV:12.8, price:216 },
+  { id:"lt-12-100bt",label:"LiTime 12V 100Ah BT", ah:100, bmsA:100, nomV:12.8, price:249 },
+  { id:"lt-12-200",  label:"LiTime 12V 200Ah",   ah:200, bmsA:200, nomV:12.8, price:369 },
+  { id:"lt-12-300",  label:"LiTime 12V 300Ah",   ah:300, bmsA:200, nomV:12.8, price:509 },
+  { id:"lt-12-400",  label:"LiTime 12V 400Ah",   ah:400, bmsA:200, nomV:12.8, price:699 },
+  { id:"lt-24-50",   label:"LiTime 24V 50Ah",    ah:50,  bmsA:60,  nomV:25.6, price:249 },
+  { id:"lt-24-100",  label:"LiTime 24V 100Ah",   ah:100, bmsA:100, nomV:25.6, price:419 },
+  { id:"lt-24-200",  label:"LiTime 24V 200Ah",   ah:200, bmsA:200, nomV:25.6, price:699 },
+  { id:"lt-36-100",  label:"LiTime 36V 100Ah",   ah:100, bmsA:100, nomV:38.4, price:589 },
+  { id:"lt-48-50",   label:"LiTime 48V 50Ah",    ah:50,  bmsA:60,  nomV:51.2, price:489 },
+  { id:"lt-48-100",  label:"LiTime 48V 100Ah",   ah:100, bmsA:100, nomV:51.2, price:759 },
+  { id:"lt-48-200",  label:"LiTime 48V 200Ah",   ah:200, bmsA:200, nomV:51.2, price:1299},
+];
+
+const CABLES = [
+  {mm2:1.5, awg:"16", iecA:19.5},{mm2:2.5, awg:"14", iecA:27},{mm2:4, awg:"12", iecA:36},
+  {mm2:6,   awg:"10", iecA:46}, {mm2:10,  awg:"8",  iecA:63},{mm2:16, awg:"6",  iecA:85},
+  {mm2:25,  awg:"4",  iecA:112},{mm2:35,  awg:"2",  iecA:138},{mm2:50, awg:"1/0",iecA:168},
+  {mm2:70,  awg:"2/0",iecA:213},{mm2:95,  awg:"3/0",iecA:258},{mm2:120,awg:"4/0",iecA:299},
+];
+const RHO20=0.0172, ALPHA=0.00393;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let S=1, P=1, battId=CATALOG[0].id, tempC=25, maxDrop=3, units="metric";
+let distBMS=1.5, distLoad=1.5;
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function calcCable(amps, lenM, temp, refV, maxPct) {
+  const rho = RHO20*(1+ALPHA*(temp-20));
+  let byAmps=CABLES[CABLES.length-1], byDrop=CABLES[CABLES.length-1];
+  for(const c of CABLES){ if(c.iecA>=amps){byAmps=c;break;} }
+  for(const c of CABLES){
+    const drop=(rho*2*lenM/c.mm2)*amps;
+    if((drop/refV*100)<=maxPct){byDrop=c;break;}
+  }
+  const chosen=byAmps.mm2>=byDrop.mm2?byAmps:byDrop;
+  const reason=byAmps.mm2>byDrop.mm2?"ampacity":byAmps.mm2<byDrop.mm2?"drop":"both";
+  const R=rho*2*lenM/chosen.mm2;
+  const dropV=R*amps;
+  return {mm2:chosen.mm2,awg:chosen.awg,ampacity:chosen.iecA,dropV:+dropV.toFixed(3),
+          dropPct:+(dropV/refV*100).toFixed(2),amps,reason};
+}
+function fuseSize(a){ return Math.ceil(a*1.25/5)*5; }
+function fmtDist(m){ return units==="imperial"?(m*3.28084).toFixed(1)+"ft":m+"m"; }
+function fmtMM2(c){ return units==="imperial"?`AWG ${c.awg}`:`${c.mm2}mm²`; }
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+function init(){
+  const sel=document.getElementById("battSelect");
+  CATALOG.forEach(b=>{
+    const o=document.createElement("option");
+    o.value=b.id; o.textContent=`${b.label} — €${b.price}`;
+    sel.appendChild(o);
+  });
+  [1,2,3,4].forEach(n=>{
+    let b=document.createElement("button");
+    b.className="btn"+(n===1?" active-accent":"");
+    b.id=`s${n}`; b.dataset.n=n;
+    b.innerHTML=`${n}S<span class="btn-sub">${(n*12.8).toFixed(1)}V</span>`;
+    b.onclick=()=>{S=n;document.querySelectorAll("#sButtons .btn").forEach(x=>x.className="btn");b.className="btn active-accent";update();};
+    document.getElementById("sButtons").appendChild(b);
+  });
+  [1,2,3,4,6,8].forEach(n=>{
+    let b=document.createElement("button");
+    b.className="btn"+(n===1?" active-primary":"");
+    b.id=`p${n}`; b.dataset.n=n;
+    b.innerHTML=`${n}P`;
+    b.onclick=()=>{P=n;document.querySelectorAll("#pButtons .btn").forEach(x=>x.className="btn");b.className="btn active-primary";update();};
+    document.getElementById("pButtons").appendChild(b);
+  });
+  [1,2,3,5].forEach(pct=>{
+    let b=document.createElement("button");
+    b.className="btn"+(pct===3?" active-accent":"");
+    b.onclick=()=>{maxDrop=pct;document.querySelectorAll("#dropButtons .btn").forEach(x=>x.className="btn");b.className="btn active-accent";update();};
+    b.textContent=`${pct}%`;
+    document.getElementById("dropButtons").appendChild(b);
+  });
+  document.getElementById("battSelect").onchange=e=>{battId=e.target.value;update();};
+  document.getElementById("tempSlider").oninput=e=>{tempC=+e.target.value;update();};
+  update();
+}
+
+function setUnits(u, el){
+  units=u;
+  document.querySelectorAll(".btn-group:last-child .btn").forEach(x=>x.className="btn");
+  if(el) el.className="btn active-primary";
+  update();
+}
+
+let currentTab=0;
+function setTab(i,el){
+  currentTab=i;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(el) el.classList.add("active");
+  ["tab0","tab1","tab2"].forEach((id,j)=>{
+    document.getElementById(id).classList.toggle("hidden",j!==i);
+  });
+}
+
+// ─── MAIN UPDATE ─────────────────────────────────────────────────────────────
+function update(){
+  const batt=CATALOG.find(b=>b.id===battId)||CATALOG[0];
+  const sysV=+(S*batt.nomV).toFixed(1);
+  const stringA=batt.bmsA;
+  const totalA=stringA*P;
+  const totalAh=batt.ah*P;
+  const totalKwh=((sysV*totalAh)/1000).toFixed(2);
+  const totalPrice=batt.price*S*P;
+  const stringFuse=fuseSize(stringA);
+  const mainFuse=fuseSize(totalA);
+  const cableStr=calcCable(totalA,distBMS,tempC,sysV,maxDrop);
+  const cableMain=calcCable(totalA,distLoad,tempC,sysV,maxDrop);
+  const totalDropV=+(cableStr.dropV+cableMain.dropV).toFixed(3);
+  const totalDropPct=+((totalDropV/sysV)*100).toFixed(2);
+  const dropOk=totalDropPct<=maxDrop;
+
+  document.getElementById("tempLabel").textContent=`Omgevingstemperatuur — ${tempC}°C`;
+  document.getElementById("dropLabel").textContent=`Max kabelverlies — ${maxDrop}%`;
+  document.getElementById("infoStrip").innerHTML=
+    `<span>BMS: <strong>${stringA}A</strong>/string · Totaal: <strong>${totalA}A</strong> (${P}P)</span>
+     <span>Zekering: ${stringFuse}A/string · ${mainFuse}A hoofd</span>`;
+
+  // Stats
+  const stats=[
+    {label:"Spanning",val:`${sysV}V`,color:"var(--accent)"},
+    {label:"Capaciteit",val:`${totalAh}Ah`,color:"var(--primary)"},
+    {label:"Energie",val:`${totalKwh}kWh`,color:"var(--green)"},
+    {label:"Max stroom",val:`${totalA}A`,color:"var(--red)"},
+    {label:"Accu's",val:`${S*P}×`,color:"var(--gold)"},
+  ];
+  document.getElementById("statsGrid").innerHTML=stats.map(s=>
+    `<div class="stat-card" style="border-top-color:${s.color}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val">${s.val}</div>
+    </div>`).join("");
+
+  // Price bar
+  document.getElementById("priceLabel").innerHTML=
+    `Indicatieve accuprijs: <span class="price-val">€${totalPrice.toLocaleString("nl-NL")}</span> excl. BTW (${S*P}× ${batt.label})`;
+
+  // Warning
+  const warnBox=document.getElementById("warnBox");
+  if(S>=2){
+    warnBox.classList.remove("hidden");
+    document.getElementById("warnText").textContent=`${S}S configuratie: actieve balancer aanbevolen om spanning tussen accu's te balanceren.`;
+  } else { warnBox.classList.add("hidden"); }
+
+  // Cable table
+  const rows=[
+    {run:`Busbar → BMS (${fmtDist(distBMS)})`, cable:cableStr, fuse:`${stringFuse}A`},
+    {run:`BMS → Last (${fmtDist(distLoad)})`, cable:cableMain, fuse:`${mainFuse}A`},
+  ];
+  document.getElementById("cableTableBody").innerHTML=rows.map(({run,cable,fuse})=>{
+    const ok=cable.dropPct<=maxDrop;
+    const reasonColor=cable.reason==="ampacity"?"var(--red)":cable.reason==="drop"?"var(--amber)":"var(--accent)";
+    const reasonLabel=cable.reason==="ampacity"?"Stroom":cable.reason==="drop"?"V-val":"Beide";
+    return `<tr>
+      <td style="color:var(--text-sec)">${run}</td>
+      <td style="font-weight:700;font-family:DM Mono,monospace">${cable.amps}A</td>
+      <td style="font-weight:700;font-family:DM Mono,monospace">${fmtMM2(cable)}</td>
+      <td style="font-family:DM Mono,monospace;color:${cable.ampacity>=cable.amps?"var(--accent)":"var(--red)"}">${cable.ampacity}A</td>
+      <td style="font-family:DM Mono,monospace;color:var(--accent)">AWG ${cable.awg}</td>
+      <td style="font-family:DM Mono,monospace">${cable.dropV}V (${cable.dropPct}%)</td>
+      <td><span class="badge-reason" style="background:${reasonColor}22;color:${reasonColor}">${reasonLabel}</span></td>
+      <td style="font-family:DM Mono,monospace;color:var(--amber-dark);font-weight:700">${fuse}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("dropSummary").className="drop-summary "+(dropOk?"drop-ok":"drop-bad");
+  document.getElementById("dropSummary").innerHTML=
+    `<span class="drop-label" style="color:${dropOk?"var(--accent)":"#991b1b"}">Totaal kabelverlies: ${totalDropV}V (${totalDropPct}%)</span>
+     <span class="drop-badge" style="background:${dropOk?"var(--accent)":"#dc2626"}">${dropOk?`< ${maxDrop}% ✓`:`> ${maxDrop}% ✗`}</span>`;
+
+  document.getElementById("footerNote").textContent=
+    `Stroom op basis van BMS-rating (${batt.label}: ${stringA}A) · NEN 1010 / IEC 60364 · ${tempC}°C · Max ${maxDrop}% verlies · Zekering IEC 60269 (125%)`;
+
+  // Quote config
+  document.getElementById("quoteConfig").textContent=
+    `Configuratie: ${S}S${P}P · ${batt.label} · ${sysV}V · ${totalAh}Ah · ${totalKwh}kWh · ${S*P} accu's · €${totalPrice.toLocaleString("nl-NL")} excl. BTW`;
+
+  // Draw diagram
+  drawDiagram({S,P,sysV,totalA,stringA,stringFuse,mainFuse,cableStr,cableMain,batt});
+
+  // Store for export
+  window._calc={S,P,sysV,totalAh,totalKwh,totalA,stringA,batt,stringFuse,mainFuse,cableStr,cableMain,tempC,distBMS,distLoad,maxDrop,totalDropV,totalDropPct,dropOk};
+}
+
+// ─── DRAGGABLE WIRING DIAGRAM ────────────────────────────────────────────────
+const PX_PER_M=28, MIN_M=0.5, MAX_M=10, BASE_GAP=30;
+let dragging=null;
+
+function drawDiagram({S,P,sysV,totalA,stringA,stringFuse,mainFuse,cableStr,cableMain,batt}){
+  const cellW=60,cellH=32,gapX=8,gapY=14,fuseW=26,fuseGap=4;
+  const startX=30,startY=40;
+  const lastCellEndX=startX+S*(cellW+gapX)-gapX;
+  const fuseStartX=lastCellEndX+fuseGap;
+  const fuseEndX=fuseStartX+fuseW;
+  const busbarX=fuseEndX+fuseGap+4;
+  const afterBusbarX=busbarX+6;
+  const bmsX=afterBusbarX+BASE_GAP+distBMS*PX_PER_M;
+  const bmsW=78;
+  const afterBmsX=bmsX+bmsW;
+  const mainFuseX=afterBmsX+10;
+  const mainFuseW=28;
+  const afterFuseX=mainFuseX+mainFuseW+10;
+  const loadX=afterFuseX+BASE_GAP+distLoad*PX_PER_M;
+  const loadW=56;
+  const svgW=loadX+loadW+24;
+  const legendH=52;
+  const svgH=P*(cellH+gapY)+80+legendH;
+  const topY=startY+cellH/2;
+  const botY=startY+(P-1)*(cellH+gapY)+cellH/2;
+  const midY=(topY+botY)/2;
+
+  // Colors
+  const red="#dc2626",blue="#2563eb",amber="#f59e0b",amberDk="#92400e";
+  const green="#16a34a",greenLt="#dcfce7",greenDk="#166534";
+  const accent="#1D8348",accentLt="#E8F5EC";
+
+  function fuse(x,y,w,h,label){
+    return `<rect x="${x}" y="${y-h/2}" width="${w}" height="${h}" rx="3" fill="#fffbeb" stroke="${amber}" stroke-width="1.5"/>
+    <polyline points="${x+4},${y} ${x+7},${y-3} ${x+10},${y+3} ${x+13},${y-3} ${x+16},${y+3} ${x+19},${y-3} ${x+w-4},${y}"
+      fill="none" stroke="${amberDk}" stroke-width="1.2"/>
+    <text x="${x+w/2}" y="${y+h/2+12}" text-anchor="middle" font-size="10" fill="${amberDk}" font-family="DM Mono,monospace" font-weight="700">${label}</text>`;
+  }
+
+  function distLabel(x1,x2,y,meters,mm2){
+    const mx=(x1+x2)/2;
+    const awg=CABLES.find(c=>c.mm2===mm2)?.awg||"";
+    const distTxt=fmtDist(meters);
+    const mm2txt=units==="imperial"?`AWG ${awg}`:`${mm2}mm²`;
+    return `<line x1="${x1+4}" y1="${y}" x2="${x2-4}" y2="${y}" stroke="${accent}" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <polygon points="${x1+4},${y-3} ${x1+4},${y+3} ${x1},${y}" fill="${accent}"/>
+    <polygon points="${x2-4},${y-3} ${x2-4},${y+3} ${x2},${y}" fill="${accent}"/>
+    <rect x="${mx-28}" y="${y-20}" width="56" height="18" rx="9" fill="${accentLt}" stroke="${accent}" stroke-width="1"/>
+    <text x="${mx}" y="${y-8}" text-anchor="middle" font-size="11" font-weight="700" fill="${accent}" font-family="DM Mono,monospace">${distTxt}</text>
+    <text x="${mx}" y="${y+14}" text-anchor="middle" font-size="10" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">${mm2txt}</text>`;
+  }
+
+  // BMS drag box
+  function dragBox(x,y,w,h,target,label,sub,fillIdle,strokeColor,textColor){
+    const handleW=4,handleH=10;
+    return `<g class="dragbox" data-target="${target}" style="cursor:grab" 
+      onpointerdown="startDrag(event,'${target}')" ontouchstart="startDrag(event,'${target}')">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${fillIdle}" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="${x+w/2}" y="${y+h/2-4}" text-anchor="middle" font-size="13" font-weight="800" fill="${textColor}" font-family="DM Sans,sans-serif">${label}</text>
+      <text x="${x+w/2}" y="${y+h/2+11}" text-anchor="middle" font-size="11" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">${sub}</text>
+      <rect x="${x+2}" y="${y+h/2-${handleH/2}}" width="${handleW}" height="${handleH}" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <rect x="${x+w-${handleW}-2}" y="${y+h/2-${handleH/2}}" width="${handleW}" height="${handleH}" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <text x="${x+w/2}" y="${y+h+14}" text-anchor="middle" font-size="10" fill="#8C8C8C" font-family="DM Sans,sans-serif">◀ sleep ▶</text>
+    </g>`;
+  }
+
+  // Cells
+  let cells="";
+  for(let r=0;r<P;r++){
+    for(let c=0;c<S;c++){
+      const x=startX+c*(cellW+gapX);
+      const y=startY+r*(cellH+gapY);
+      const lbl=S===1&&P===1?`${batt.nomV}V`:`S${c+1}`;
+      cells+=`<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+      <rect x="${x+cellW-6}" y="${y+cellH/2-5}" width="6" height="10" fill="${red}" rx="1"/>
+      <rect x="${x}" y="${y+cellH/2-5}" width="6" height="10" fill="${blue}" rx="1"/>
+      <text x="${x+cellW/2}" y="${y+cellH/2+4}" text-anchor="middle" font-size="12" fill="#475569" font-family="DM Mono,monospace" font-weight="600">${lbl}</text>`;
+    }
+  }
+
+  // Series wires
+  let seriesWires="";
+  for(let r=0;r<P;r++){
+    for(let c=0;c<S-1;c++){
+      const x1=startX+(c+1)*(cellW+gapX)-gapX;
+      const y=startY+r*(cellH+gapY)+cellH/2;
+      seriesWires+=`<line x1="${x1}" y1="${y}" x2="${x1+gapX}" y2="${y}" stroke="${red}" stroke-width="2"/>`;
+    }
+  }
+
+  // String fuses inline
+  let stringFuses="";
+  for(let r=0;r<P;r++){
+    const y=startY+r*(cellH+gapY)+cellH/2;
+    stringFuses+=`<line x1="${lastCellEndX}" y1="${y}" x2="${fuseStartX}" y2="${y}" stroke="${red}" stroke-width="2"/>`;
+    stringFuses+=fuse(fuseStartX,y,fuseW,14,`${stringFuse}A`);
+    stringFuses+=`<line x1="${fuseEndX}" y1="${y}" x2="${busbarX}" y2="${y}" stroke="${red}" stroke-width="2"/>`;
+  }
+
+  // Negative busbar
+  const negX=startX-16;
+  let negBus=`<line x1="${negX}" y1="${topY}" x2="${negX}" y2="${botY}" stroke="${blue}" stroke-width="3"/>`;
+  for(let r=0;r<P;r++){
+    const y=startY+r*(cellH+gapY)+cellH/2;
+    negBus+=`<line x1="${negX}" y1="${y}" x2="${startX}" y2="${y}" stroke="${blue}" stroke-width="2"/>`;
+  }
+
+  // BMS sense wires
+  let senseWires="";
+  for(let r=0;r<P;r++){
+    const y=startY+r*(cellH+gapY)+cellH/2+12;
+    senseWires+=`<line x1="${startX+S*(cellW+gapX)/2}" y1="${y}" x2="${bmsX}" y2="${midY+15}" stroke="#eab308" stroke-width="0.7" stroke-dasharray="3,2" opacity="0.4"/>`;
+  }
+
+  // Legend
+  const ly=svgH-legendH+4;
+  const legendItems=[
+    {type:"line",color:red,label:"Positief (+)"},
+    {type:"line",color:blue,label:"Negatief (−)"},
+    {type:"fuse",label:"Zekering"},
+    {type:"dash",color:"#eab308",label:"BMS sense"},
+    {type:"box",color:green,fill:greenLt,label:"Last-zijde"},
+  ];
+  let legend=`<line x1="${startX}" y1="${ly-6}" x2="${svgW-20}" y2="${ly-6}" stroke="#ECEAE6" stroke-width="1"/>
+    <text x="${startX}" y="${ly+6}" font-size="11" font-weight="700" fill="#5C5C5C" font-family="DM Sans,sans-serif">LEGENDA</text>`;
+  legendItems.forEach((item,i)=>{
+    const ix=startX+i*95;
+    const iy=ly+22;
+    if(item.type==="line") legend+=`<line x1="${ix}" y1="${iy}" x2="${ix+18}" y2="${iy}" stroke="${item.color}" stroke-width="3" stroke-linecap="round"/>`;
+    if(item.type==="fuse") legend+=`<rect x="${ix}" y="${iy-6}" width="18" height="12" rx="2" fill="#fffbeb" stroke="${amber}" stroke-width="1.5"/>
+      <polyline points="${ix+3},${iy} ${ix+6},${iy-2} ${ix+9},${iy+2} ${ix+12},${iy-2} ${ix+15},${iy}" fill="none" stroke="${amberDk}" stroke-width="1"/>`;
+    if(item.type==="dash") legend+=`<line x1="${ix}" y1="${iy}" x2="${ix+18}" y2="${iy}" stroke="${item.color}" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+    if(item.type==="box") legend+=`<rect x="${ix}" y="${iy-6}" width="18" height="12" rx="3" fill="${item.fill}" stroke="${item.color}" stroke-width="1.5"/>`;
+    legend+=`<text x="${ix+24}" y="${iy+4}" font-size="11" fill="#5C5C5C" font-family="DM Sans,sans-serif">${item.label}</text>`;
+  });
+
+  const svg=`<svg id="wiringSVG" width="100%" viewBox="0 0 ${svgW} ${svgH}"
+    style="max-width:${Math.max(svgW,500)}px;display:block;margin:0 auto;user-select:none"
+    data-afterbusbarx="${afterBusbarX}" data-afterfusex="${afterFuseX}">
+    <defs>
+      <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#94a3b8" flood-opacity="0.15"/>
+      </filter>
+    </defs>
+    ${negBus}
+    ${cells}
+    ${seriesWires}
+    ${stringFuses}
+    <line x1="${busbarX}" y1="${topY}" x2="${busbarX}" y2="${botY}" stroke="${red}" stroke-width="3"/>
+    <line x1="${afterBusbarX}" y1="${midY}" x2="${bmsX}" y2="${midY}" stroke="${red}" stroke-width="3"/>
+    ${distLabel(afterBusbarX,bmsX,midY-28,distBMS,cableStr.mm2)}
+    ${senseWires}
+    <g class="dragbox" data-target="bms" style="cursor:grab" onpointerdown="startDrag(event,'bms')" ontouchstart="startDrag(event,'bms')">
+      <rect x="${bmsX}" y="${midY-22}" width="${bmsW}" height="44" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="${bmsX+bmsW/2}" y="${midY-5}" text-anchor="middle" font-size="13" font-weight="800" fill="#1A1A1A" font-family="DM Sans,sans-serif">BMS</text>
+      <text x="${bmsX+bmsW/2}" y="${midY+11}" text-anchor="middle" font-size="11" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">${totalA}A max</text>
+      <rect x="${bmsX+2}" y="${midY-5}" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <rect x="${bmsX+bmsW-6}" y="${midY-5}" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <text x="${bmsX+bmsW/2}" y="${midY+36}" text-anchor="middle" font-size="10" fill="#8C8C8C" font-family="DM Sans,sans-serif">◀ sleep ▶</text>
+    </g>
+    <line x1="${afterBmsX}" y1="${midY}" x2="${mainFuseX}" y2="${midY}" stroke="${red}" stroke-width="3"/>
+    ${fuse(mainFuseX,midY,mainFuseW,18,`${mainFuse}A`)}
+    <line x1="${afterFuseX}" y1="${midY}" x2="${loadX}" y2="${midY}" stroke="${green}" stroke-width="3"/>
+    ${distLabel(afterFuseX,loadX,midY-28,distLoad,cableMain.mm2)}
+    <g class="dragbox" data-target="load" style="cursor:grab" onpointerdown="startDrag(event,'load')" ontouchstart="startDrag(event,'load')">
+      <rect x="${loadX}" y="${midY-18}" width="${loadW}" height="36" rx="6" fill="${greenLt}" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+      <text x="${loadX+loadW/2}" y="${midY-3}" text-anchor="middle" font-size="13" font-weight="800" fill="${greenDk}" font-family="DM Sans,sans-serif">LAST</text>
+      <text x="${loadX+loadW/2}" y="${midY+13}" text-anchor="middle" font-size="11" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">${sysV}V</text>
+      <rect x="${loadX+2}" y="${midY-5}" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <rect x="${loadX+loadW-6}" y="${midY-5}" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>
+      <text x="${loadX+loadW/2}" y="${midY+30}" text-anchor="middle" font-size="10" fill="#8C8C8C" font-family="DM Sans,sans-serif">◀ sleep ▶</text>
+    </g>
+    ${legend}
+    <text x="${svgW-10}" y="${svgH-8}" text-anchor="end" font-size="10" font-weight="500" fill="#8C8C8C" font-family="DM Mono,monospace">
+      ${S}S${P}P · ${sysV}V · ${totalA}A · ${stringFuse}A/string · ${mainFuse}A hoofd
+    </text>
+  </svg>`;
+
+  document.getElementById("diagramContainer").innerHTML=svg;
+  setupDrag();
+}
+
+function setupDrag(){
+  const svg=document.getElementById("wiringSVG");
+  if(!svg) return;
+  svg.addEventListener("pointermove",handleDragMove,{passive:false});
+  svg.addEventListener("pointerup",()=>{dragging=null;});
+  svg.addEventListener("touchend",()=>{dragging=null;});
+  window.addEventListener("pointerup",()=>{dragging=null;});
+}
+
+function startDrag(e,target){
+  e.preventDefault();
+  dragging=target;
+}
+
+function handleDragMove(e){
+  if(!dragging) return;
+  const svg=document.getElementById("wiringSVG");
+  if(!svg) return;
+  const pt=svg.createSVGPoint();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  pt.x=clientX; pt.y=0;
+  const svgPt=pt.matrixTransform(svg.getScreenCTM().inverse());
+  const afterBusbarX=+svg.dataset.afterbusbarx;
+  const afterFuseX=+svg.dataset.afterfusex;
+  if(dragging==="bms"){
+    const px=svgPt.x-afterBusbarX-BASE_GAP;
+    distBMS=Math.round(Math.max(MIN_M,Math.min(MAX_M,px/PX_PER_M))*2)/2;
+    update();
+  } else if(dragging==="load"){
+    const px=svgPt.x-afterFuseX-BASE_GAP;
+    distLoad=Math.round(Math.max(MIN_M,Math.min(MAX_M,px/PX_PER_M))*2)/2;
+    update();
+  }
+}
+
+// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function exportPDF(){
+  const c=window._calc;
+  if(!c) return;
+  const svgEl=document.getElementById("wiringSVG");
+  const svgHTML=svgEl?svgEl.outerHTML:"";
+  const win=window.open("","_blank");
+  if(!win) return;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>LiTime ${c.S}S${c.P}P Systeemrapport — Greenspark</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&family=DM+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',system-ui,sans-serif;color:#1A1A1A;padding:2rem;max-width:820px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:0.25rem;color:#1E3A2F}
+.sub{color:#5C5C5C;font-size:0.85rem;margin-bottom:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1.5rem}
+.stat{background:#f8fafc;border:1px solid #DDD9D3;border-radius:8px;padding:0.75rem;text-align:center}
+.stat-l{font-size:10px;color:#8C8C8C;text-transform:uppercase;letter-spacing:.05em;font-weight:700;font-family:'DM Mono',monospace}
+.stat-v{font-size:1.25rem;font-weight:800;margin-top:2px}
+.diagram{margin-bottom:1.5rem}.diagram svg{max-width:100%;height:auto}
+table{width:100%;border-collapse:collapse;margin-bottom:1.5rem;font-size:13px}
+th{padding:8px 10px;text-align:left;color:#5C5C5C;font-size:11px;text-transform:uppercase;border-bottom:2px solid #DDD9D3;font-family:'DM Mono',monospace}
+td{padding:8px 10px;border-bottom:1px solid #ECEAE6}
+.ok{background:#E8F5EC;color:#1D8348;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.bad{background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.footer{margin-top:2rem;padding-top:1rem;border-top:1px solid #DDD9D3;font-family:'DM Mono',monospace;font-size:11px;color:#8C8C8C}
+@media print{body{padding:0.5rem}}
+</style></head><body>
+<h1>LiTime ${c.S}S${c.P}P Systeemrapport</h1>
+<p class="sub">${c.batt.label} · ${new Date().toLocaleDateString("nl-NL")} · Greenspark B2B · info@greenspark.nl</p>
+<div class="stats">
+  <div class="stat"><div class="stat-l">Spanning</div><div class="stat-v">${c.sysV}V</div></div>
+  <div class="stat"><div class="stat-l">Capaciteit</div><div class="stat-v">${c.totalAh}Ah</div></div>
+  <div class="stat"><div class="stat-l">Energie</div><div class="stat-v">${c.totalKwh}kWh</div></div>
+  <div class="stat"><div class="stat-l">Max stroom</div><div class="stat-v">${c.totalA}A</div></div>
+  <div class="stat"><div class="stat-l">Accu's</div><div class="stat-v">${c.S*c.P}×</div></div>
+</div>
+<div class="diagram">${svgHTML}</div>
+<h2 style="font-size:1rem;margin-bottom:.5rem">Kabeladvies</h2>
+<table>
+<tr><th>Verbinding</th><th>Stroom</th><th>mm²</th><th>AWG</th><th>Val (V)</th><th>Status</th><th>Zekering</th></tr>
+<tr><td>Busbar → BMS (${c.distBMS}m)</td><td><strong>${c.cableStr.amps}A</strong></td><td><strong>${c.cableStr.mm2}</strong></td><td>AWG ${c.cableStr.awg}</td><td>${c.cableStr.dropV}V (${c.cableStr.dropPct}%)</td><td><span class="${c.cableStr.dropPct<=c.maxDrop?"ok":"bad"}">${c.cableStr.dropPct<=c.maxDrop?"OK":"CHECK"}</span></td><td>${c.stringFuse}A</td></tr>
+<tr><td>BMS → Last (${c.distLoad}m)</td><td><strong>${c.cableMain.amps}A</strong></td><td><strong>${c.cableMain.mm2}</strong></td><td>AWG ${c.cableMain.awg}</td><td>${c.cableMain.dropV}V (${c.cableMain.dropPct}%)</td><td><span class="${c.cableMain.dropPct<=c.maxDrop?"ok":"bad"}">${c.cableMain.dropPct<=c.maxDrop?"OK":"CHECK"}</span></td><td>${c.mainFuse}A</td></tr>
+</table>
+<p style="padding:.6rem 1rem;background:${c.dropOk?"#E8F5EC":"#fef2f2"};border-radius:6px;font-weight:700;color:${c.dropOk?"#1D8348":"#991b1b"}">
+Totaal kabelverlies: ${c.totalDropV}V (${c.totalDropPct}%) — max ${c.maxDrop}%: ${c.dropOk?"✓ OK":"✗ TE HOOG"}
+</p>
+<p class="footer">
+NEN 1010 / IEC 60364-5-52 (methode C, PVC 70°C) · ${c.tempC}°C · Zekering IEC 60269 (125%)<br>
+Greenspark · info@greenspark.nl · LiTime drop-ship vanuit Duitsland · excl. BTW
+</p>
+</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),300);
+}
+
+// ─── QUOTE MAILTO ─────────────────────────────────────────────────────────────
+function buildMailto(){
+  const bedrijf=document.getElementById("qBedrijf").value||"[bedrijfsnaam]";
+  const naam=document.getElementById("qNaam").value||"[naam]";
+  const email=document.getElementById("qEmail").value;
+  const tel=document.getElementById("qTel").value;
+  const opmerking=document.getElementById("qOpmerking").value;
+  const c=window._calc;
+  if(!c) return false;
+  const subject=encodeURIComponent(`B2B Offerte aanvraag — ${c.S}S${c.P}P ${c.batt.label}`);
+  const body=encodeURIComponent(
+`Beste Greenspark,
+
+Graag ontvang ik een offerte voor de volgende configuratie:
+
+Configuratie: ${c.S}S${c.P}P
+Model: ${c.batt.label}
+Spanning: ${c.sysV}V
+Capaciteit: ${c.totalAh}Ah
+Energie: ${c.totalKwh}kWh
+Aantal accu's: ${c.S*c.P}×
+Indicatieve prijs: €${(c.batt.price*c.S*c.P).toLocaleString("nl-NL")} excl. BTW
+
+Contactgegevens:
+Bedrijf: ${bedrijf}
+Contactpersoon: ${naam}
+Telefoon: ${tel||"—"}
+
+${opmerking?`Opmerkingen:\n${opmerking}\n\n`:""}Met vriendelijke groet,
+${naam}
+${bedrijf}`);
+  document.getElementById("quoteMailto").href=`mailto:info@greenspark.nl?subject=${subject}&body=${body}`;
+  return true;
+}
+
+window.onload=init;
+</script>
+</body>
+</html>
