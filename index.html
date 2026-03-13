@@ -113,7 +113,7 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:9
   <div class="panel hidden" id="tab1">
     <table class="ctbl">
       <thead><tr>
-        <th>Verbinding</th><th>Stroom</th><th>Doorsnede</th><th>Ampaciteit</th><th id="awgTh" class="">AWG</th><th>Spanningsval</th><th>Basis</th><th>Zekering</th>
+        <th>Verbinding</th><th>Stroom</th><th>Doorsnede</th><th title="Kabelcapaciteit ≥ zekering">Capaciteit</th><th id="awgTh" class="">AWG</th><th>Spanningsval</th><th>Basis</th><th>Zekering</th>
       </tr></thead>
       <tbody id="cableTbl"></tbody>
     </table>
@@ -166,8 +166,9 @@ var distBMS=1.5,distLoad=1.5,dragging=null;
 
 function calcCable(amps,lenM,temp,refV,maxPct){
   var rho=RHO*(1+ALPHA*(temp-20));
+  var fuseA=fuseSize(amps); // kabel moet zekering overleven
   var byAmps=CABLES[CABLES.length-1],byDrop=CABLES[CABLES.length-1];
-  for(var i=0;i<CABLES.length;i++){if(CABLES[i].iecA>=amps){byAmps=CABLES[i];break;}}
+  for(var i=0;i<CABLES.length;i++){if(CABLES[i].iecA>=fuseA){byAmps=CABLES[i];break;}}
   for(var i=0;i<CABLES.length;i++){
     var drop=(rho*2*lenM/CABLES[i].mm2)*amps;
     if((drop/refV*100)<=maxPct){byDrop=CABLES[i];break;}
@@ -301,7 +302,7 @@ function update(){
       "<td style='color:var(--text-sec)'>"+r.run+"</td>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+r.cable.amps+"A</td>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+fmtMM2(r.cable)+"</td>"+
-      "<td style='font-family:DM Mono,monospace;color:"+(r.cable.ampacity>=r.cable.amps?"var(--accent)":"var(--red)")+"'>"+r.cable.ampacity+"A</td>"+
+      "<td style='font-family:DM Mono,monospace;color:var(--accent)' title='Zekering: "+fuseSize(r.cable.amps)+"A'>"+r.cable.ampacity+"A</td>"+
       "<td class='awg-col' style='font-family:DM Mono,monospace;color:var(--accent)'>AWG "+r.cable.awg+"</td>"+
       "<td style='font-family:DM Mono,monospace'>"+r.cable.dropV+"V ("+r.cable.dropPct+"%)</td>"+
       "<td><span style='background:"+rc+"22;color:"+rc+";padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800'>"+rl+"</span></td>"+
@@ -447,6 +448,7 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
     '<line x1="'+abmsX+'" y1="'+midY+'" x2="'+mfX+'" y2="'+midY+'" stroke="'+RED+'" stroke-width="3"/>'+
     fuseEl(mfX,midY,mfW,18,mFuse+"A")+
     '<line x1="'+afX+'" y1="'+midY+'" x2="'+loadX+'" y2="'+midY+'" stroke="'+GREEN+'" stroke-width="3"/>'+
+    '<line x1="'+afX+'" y1="'+(midY+8)+'" x2="'+loadX+'" y2="'+(midY+8)+'" stroke="'+BLUE+'" stroke-width="2" stroke-dasharray="6,3" opacity="0.7"/>'+
     distLbl(afX,loadX,midY-28,distLoad,cMain.mm2)+
     '<g style="cursor:grab" onpointerdown="startDrag(event,\'load\')" ontouchstart="startDrag(event,\'load\')">'+
       '<rect x="'+loadX+'" y="'+(midY-18)+'" width="'+loadW+'" height="36" rx="6" fill="'+GREENL+'" stroke="#64748b" stroke-width="1.5" filter="url(#sh)"/>'+
@@ -559,43 +561,23 @@ function renderInkoop(){
     {label:"BMS \u2192 Last",     color:"blauw", cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"}
   ];
 
-  // Groepeer op mm2 + kleur (zodat zelfde diameter maar andere kleur een eigen rij krijgt)
-  var grouped={};
-  runs.forEach(function(r){
-    var key=r.cable.mm2+"-"+r.color;
-    if(!grouped[key])grouped[key]={mm2:r.cable.mm2,awg:r.cable.awg,color:r.color,items:[]};
-    grouped[key].items.push(r);
-  });
-
-  // Sorteer op mm2 ASC, dan rood voor blauw
-  var sortedKeys=Object.keys(grouped).sort(function(a,b){
-    var mm2A=grouped[a].mm2,mm2B=grouped[b].mm2;
-    if(mm2A!==mm2B)return mm2A-mm2B;
-    return grouped[a].color==="rood"?-1:1;
-  });
-
+  // Elke run = eigen rij, geen groepering
   var COLOR_DOT={"rood":"#dc2626","blauw":"#2563eb"};
 
   var cableRows="";
-  sortedKeys.forEach(function(k){
-    var g=grouped[k];
-    var totalRawLen=0;
-    g.items.forEach(function(it){
-      totalRawLen+=it.len*it.qty; // rood en blauw zijn aparte rijen, geen ×2
-    });
-    var totalLen=Math.ceil(totalRawLen*1.1); // +10% marge
+  runs.forEach(function(r){
+    var rawLen=r.len*r.qty;
+    var totalLen=Math.ceil(rawLen*1.1); // +10% marge
     var totalLenLbl=units==="imperial"?+(totalLen*3.28084).toFixed(1)+"ft":totalLen+"m";
-    var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
-    var dot="<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+COLOR_DOT[g.color]+";margin-right:5px;vertical-align:middle'></span>";
-    var gebruik=g.items.map(function(it){
-      var qtyLbl=it.qty>1?" × "+it.qty+"":"";
-      return it.label+" ("+fmtDist(it.len)+qtyLbl+")";
-    }).join("; ");
+    var mm2lbl=units==="imperial"?"AWG "+r.cable.awg:r.cable.mm2+"mm\u00b2";
+    var dot="<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+COLOR_DOT[r.color]+";margin-right:5px;vertical-align:middle'></span>";
+    var qtyLbl=r.qty>1?" ("+r.qty+"× "+fmtDist(r.len)+")":"";
+    var omschr=r.label+(qtyLbl||" ("+fmtDist(r.len)+")")+" — "+r.note;
     cableRows+="<tr>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+mm2lbl+"</td>"+
       "<td style='font-family:DM Mono,monospace'>"+totalLenLbl+"</td>"+
-      "<td>"+dot+g.color+"</td>"+
-      "<td style='color:var(--text-muted);font-size:12px'>"+gebruik+"</td>"+
+      "<td>"+dot+r.color+"</td>"+
+      "<td style='color:var(--text-muted);font-size:12px'>"+omschr+"</td>"+
     "</tr>";
   });
 
