@@ -42,7 +42,7 @@ select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:
 .tab{padding:8px 18px;border-radius:7px 7px 0 0;border:1px solid var(--border);border-bottom:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:#f4f2ee;color:var(--text-muted);margin-bottom:-1px;position:relative;z-index:0}
 .tab.act{background:var(--card);color:var(--text);z-index:1;border-bottom:1px solid var(--card)}
 .panel{background:var(--card);border:1px solid var(--border);border-radius:0 9px 9px 9px;padding:1.25rem}
-.hidden{display:none!important}
+.hidden{display:none!important}.awg-hidden th#awgTh,.awg-hidden .awg-col{display:none}
 .info{padding:7px 12px;background:var(--accent-light);border-radius:6px;font-size:12px;color:var(--accent);font-family:'DM Mono',monospace;display:flex;justify-content:space-between;margin-top:.75rem}
 .warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;color:var(--amber-dark);font-size:13px;display:flex;align-items:center;gap:8px}
 .pbar{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;margin-bottom:.75rem}
@@ -106,13 +106,14 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:9
   <div class="tab-bar">
     <button class="tab act" onclick="setTab(0,this)">Bedradingsschema</button>
     <button class="tab" onclick="setTab(1,this)">Kabeladvies</button>
-    <button class="tab" onclick="setTab(2,this)">Offerte aanvragen</button>
+    <button class="tab" onclick="setTab(2,this)">Inkooplijst</button>
+    <button class="tab" onclick="setTab(3,this)">Offerte aanvragen</button>
   </div>
   <div class="panel" id="tab0"><div id="diagram" style="overflow:auto"></div></div>
   <div class="panel hidden" id="tab1">
     <table class="ctbl">
       <thead><tr>
-        <th>Verbinding</th><th>Stroom</th><th>Doorsnede</th><th>Ampaciteit</th><th>AWG</th><th>Spanningsval</th><th>Basis</th><th>Zekering</th>
+        <th>Verbinding</th><th>Stroom</th><th>Doorsnede</th><th>Ampaciteit</th><th id="awgTh" class="">AWG</th><th>Spanningsval</th><th>Basis</th><th>Zekering</th>
       </tr></thead>
       <tbody id="cableTbl"></tbody>
     </table>
@@ -120,6 +121,9 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:9
     <p class="foot" id="footNote"></p>
   </div>
   <div class="panel hidden" id="tab2">
+  <div id="inkoop"></div>
+</div>
+<div class="panel hidden" id="tab3">
     <p style="font-size:14px;color:var(--text-sec);margin-bottom:1rem;line-height:1.6">Vul uw gegevens in voor een vrijblijvende offerte op maat.</p>
     <div class="g2" style="gap:.75rem;margin-bottom:.75rem">
       <div><label class="lbl">Bedrijfsnaam</label><input type="text" id="qBedrijf"></div>
@@ -133,7 +137,7 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:9
   </div>
 </div>
 <div class="gfoot">Greenspark B2B Calculator &middot; info@greenspark.nl<br>LiTime drop-ship vanuit Duitsland &middot; excl. BTW tenzij anders vermeld</div>
-
+ 
 <script>
 var CATALOG=[
   {id:"lt-12-50",   label:"LiTime 12V 50Ah",    ah:50,  bmsA:60,  nomV:12.8,price:136},
@@ -159,7 +163,7 @@ var CABLES=[
 var RHO=0.0172,ALPHA=0.00393,PX_M=28,MIN_M=0.5,MAX_M=10,BASE_GAP=30;
 var S=1,P=1,battId=CATALOG[0].id,tempC=25,maxDrop=3,units="metric";
 var distBMS=1.5,distLoad=1.5,dragging=null;
-
+ 
 function calcCable(amps,lenM,temp,refV,maxPct){
   var rho=RHO*(1+ALPHA*(temp-20));
   var byAmps=CABLES[CABLES.length-1],byDrop=CABLES[CABLES.length-1];
@@ -176,7 +180,7 @@ function calcCable(amps,lenM,temp,refV,maxPct){
 function fuseSize(a){return Math.ceil(a*1.25/5)*5;}
 function fmtDist(m){return units==="imperial"?(m*3.28084).toFixed(1)+"ft":m+"m";}
 function fmtMM2(c){return units==="imperial"?"AWG "+c.awg:c.mm2+"mm\u00b2";}
-
+ 
 function init(){
   var sel=document.getElementById("battSel");
   CATALOG.forEach(function(b){
@@ -209,22 +213,22 @@ function init(){
   document.getElementById("tempSlider").oninput=function(){tempC=+this.value;update();};
   update();
 }
-
+ 
 function setUnits(u,el){
   units=u;
   document.querySelectorAll(".bg:last-child .btn").forEach(function(x){x.className="btn";});
   if(el)el.className="btn ap";
   update();
 }
-
+ 
 function setTab(i,el){
   document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("act");});
   if(el)el.classList.add("act");
-  ["tab0","tab1","tab2"].forEach(function(id,j){
+  ["tab0","tab1","tab2","tab3"].forEach(function(id,j){
     document.getElementById(id).classList.toggle("hidden",j!==i);
   });
 }
-
+ 
 function update(){
   var batt=CATALOG.find(function(b){return b.id===battId;})||CATALOG[0];
   var sysV=+(S*batt.nomV).toFixed(1);
@@ -238,13 +242,13 @@ function update(){
   var totDV=+(cStr.dropV+cMain.dropV).toFixed(3);
   var totDP=+((totDV/sysV)*100).toFixed(2);
   var dropOk=totDP<=maxDrop;
-
+ 
   document.getElementById("tempLbl").textContent="Temperatuur \u2014 "+tempC+"\u00b0C";
   document.getElementById("dropLbl").textContent="Max kabelverlies \u2014 "+maxDrop+"%";
   document.getElementById("infoStrip").innerHTML=
     "<span>BMS: <strong>"+stringA+"A</strong>/string &middot; Totaal: <strong>"+totalA+"A</strong> ("+P+"P)</span>"+
     "<span>Zekering: "+sFuse+"A/string &middot; "+mFuse+"A hoofd</span>";
-
+ 
   var stats=[
     {l:"Spanning",v:sysV+"V",c:"var(--accent)"},
     {l:"Capaciteit",v:totalAh+"Ah",c:"var(--primary)"},
@@ -255,19 +259,23 @@ function update(){
   document.getElementById("statsGrid").innerHTML=stats.map(function(s){
     return "<div class='stat' style='border-top-color:"+s.c+"'><div class='stat-l'>"+s.l+"</div><div class='stat-v'>"+s.v+"</div></div>";
   }).join("");
-
+ 
   document.getElementById("priceLbl").innerHTML=
     "Indicatieve accuprijs: <strong style='color:var(--accent);font-size:15px'>\u20ac"+totalPrice.toLocaleString("nl-NL")+"</strong> excl. BTW ("+S*P+"\u00d7 "+batt.label+")";
-
+ 
   var wb=document.getElementById("warnBox");
   if(S>=2){wb.classList.remove("hidden");document.getElementById("warnTxt").textContent=S+"S configuratie: actieve balancer aanbevolen.";}
   else wb.classList.add("hidden");
-
+ 
   var rows=[
     {run:"Busbar \u2192 BMS ("+fmtDist(distBMS)+")",cable:cStr,fuse:sFuse+"A"},
     {run:"BMS \u2192 Last ("+fmtDist(distLoad)+")",cable:cMain,fuse:mFuse+"A"}
   ];
-  document.getElementById("cableTbl").innerHTML=rows.map(function(r){
+  var cTbl=document.getElementById("cableTbl");
+  var tblWrap=cTbl.closest("table");
+  if(units==="metric")tblWrap.classList.add("awg-hidden");
+  else tblWrap.classList.remove("awg-hidden");
+  cTbl.innerHTML=rows.map(function(r){
     var ok=r.cable.dropPct<=maxDrop;
     var rc=r.cable.reason==="ampacity"?"var(--red)":r.cable.reason==="drop"?"var(--amber)":"var(--accent)";
     var rl=r.cable.reason==="ampacity"?"Stroom":r.cable.reason==="drop"?"V-val":"Beide";
@@ -276,32 +284,33 @@ function update(){
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+r.cable.amps+"A</td>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+fmtMM2(r.cable)+"</td>"+
       "<td style='font-family:DM Mono,monospace;color:"+(r.cable.ampacity>=r.cable.amps?"var(--accent)":"var(--red)")+"'>"+r.cable.ampacity+"A</td>"+
-      "<td style='font-family:DM Mono,monospace;color:var(--accent)'>AWG "+r.cable.awg+"</td>"+
+      "<td class='awg-col' style='font-family:DM Mono,monospace;color:var(--accent)'>AWG "+r.cable.awg+"</td>"+
       "<td style='font-family:DM Mono,monospace'>"+r.cable.dropV+"V ("+r.cable.dropPct+"%)</td>"+
       "<td><span style='background:"+rc+"22;color:"+rc+";padding:3px 8px;border-radius:4px;font-size:10px;font-weight:800'>"+rl+"</span></td>"+
       "<td style='font-family:DM Mono,monospace;color:var(--amber-dark);font-weight:700'>"+r.fuse+"</td>"+
     "</tr>";
   }).join("");
-
+ 
   var ds=document.getElementById("dropSum");
   ds.className="ds "+(dropOk?"ok":"bad");
   ds.innerHTML=
     "<span style='font-size:13px;font-weight:700;color:"+(dropOk?"var(--accent)":"#991b1b")+"'>Totaal kabelverlies: "+totDV+"V ("+totDP+"%)</span>"+
     "<span style='padding:4px 14px;border-radius:4px;font-size:12px;font-weight:800;color:white;background:"+(dropOk?"var(--accent)":"#dc2626")+";'>"+(dropOk?"< "+maxDrop+"% \u2713":"> "+maxDrop+"% \u2717")+"</span>";
-
+ 
   document.getElementById("footNote").textContent=
     "Stroom op basis van BMS-rating ("+batt.label+": "+stringA+"A) \u00b7 NEN 1010 / IEC 60364 \u00b7 "+tempC+"\u00b0C \u00b7 Max "+maxDrop+"% \u00b7 Zekering IEC 60269 (125%)";
-
+ 
   document.getElementById("qConf").textContent=
     "Configuratie: "+S+"S"+P+"P \u00b7 "+batt.label+" \u00b7 "+sysV+"V \u00b7 "+totalAh+"Ah \u00b7 "+totalKwh+"kWh \u00b7 "+S*P+" accu's \u00b7 \u20ac"+totalPrice.toLocaleString("nl-NL")+" excl. BTW";
-
+ 
   drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt);
-
+ 
   window._C={S:S,P:P,sysV:sysV,totalAh:totalAh,totalKwh:totalKwh,totalA:totalA,stringA:stringA,
     batt:batt,sFuse:sFuse,mFuse:mFuse,cStr:cStr,cMain:cMain,tempC:tempC,
     distBMS:distBMS,distLoad:distLoad,maxDrop:maxDrop,totDV:totDV,totDP:totDP,dropOk:dropOk};
+  renderInkoop();
 }
-
+ 
 function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
   var cW=60,cH=32,gX=8,gY=14,fW=26,fG=4;
   var sX=30,sY=40;
@@ -317,17 +326,17 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
   var legH=52;
   var svgH=P*(cH+gY)+80+legH;
   var topY=sY+cH/2,botY=sY+(P-1)*(cH+gY)+cH/2,midY=(topY+botY)/2;
-
+ 
   var RED="#dc2626",BLUE="#2563eb",AMBER="#f59e0b",AMBD="#92400e";
   var GREEN="#16a34a",GREENL="#dcfce7",GREEND="#166534";
   var ACC="#1D8348",ACCL="#E8F5EC";
-
+ 
   function fuseEl(x,y,w,h,lbl){
     return '<rect x="'+x+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" rx="3" fill="#fffbeb" stroke="'+AMBER+'" stroke-width="1.5"/>'+
       '<polyline points="'+(x+4)+','+y+' '+(x+7)+','+(y-3)+' '+(x+10)+','+(y+3)+' '+(x+13)+','+(y-3)+' '+(x+16)+','+(y+3)+' '+(x+19)+','+(y-3)+' '+(x+w-4)+','+y+'" fill="none" stroke="'+AMBD+'" stroke-width="1.2"/>'+
       '<text x="'+(x+w/2)+'" y="'+(y+h/2+12)+'" text-anchor="middle" font-size="10" fill="'+AMBD+'" font-family="DM Mono,monospace" font-weight="700">'+lbl+'</text>';
   }
-
+ 
   function distLbl(x1,x2,y,meters,mm2){
     var mx=(x1+x2)/2;
     var awg=(CABLES.find(function(c){return c.mm2===mm2;})||{awg:""}).awg;
@@ -340,19 +349,19 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
       '<text x="'+mx+'" y="'+(y-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+ACC+'" font-family="DM Mono,monospace">'+dt+'</text>'+
       '<text x="'+mx+'" y="'+(y+14)+'" text-anchor="middle" font-size="10" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">'+mt+'</text>';
   }
-
+ 
   var cells="";
   for(var r=0;r<P;r++){
     for(var c=0;c<S;c++){
       var x=sX+c*(cW+gX),y=sY+r*(cH+gY);
-      var lbl=(S===1&&P===1)?batt.nomV+"V":"S"+(c+1);
+      var lbl=(S===1&&P===1)?batt.nomV+"V":"ACCU";
       cells+='<rect x="'+x+'" y="'+y+'" width="'+cW+'" height="'+cH+'" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" filter="url(#sh)"/>'+
         '<rect x="'+(x+cW-6)+'" y="'+(y+cH/2-5)+'" width="6" height="10" fill="'+RED+'" rx="1"/>'+
         '<rect x="'+x+'" y="'+(y+cH/2-5)+'" width="6" height="10" fill="'+BLUE+'" rx="1"/>'+
         '<text x="'+(x+cW/2)+'" y="'+(y+cH/2+4)+'" text-anchor="middle" font-size="12" fill="#475569" font-family="DM Mono,monospace" font-weight="600">'+lbl+'</text>';
     }
   }
-
+ 
   var sw="";
   for(var r=0;r<P;r++){
     for(var c=0;c<S-1;c++){
@@ -360,7 +369,7 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
       sw+='<line x1="'+x1+'" y1="'+y+'" x2="'+(x1+gX)+'" y2="'+y+'" stroke="'+RED+'" stroke-width="2"/>';
     }
   }
-
+ 
   var sf="";
   for(var r=0;r<P;r++){
     var y=sY+r*(cH+gY)+cH/2;
@@ -368,19 +377,19 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
     sf+=fuseEl(fsX,y,fW,14,sFuse+"A");
     sf+='<line x1="'+feX+'" y1="'+y+'" x2="'+bbX+'" y2="'+y+'" stroke="'+RED+'" stroke-width="2"/>';
   }
-
+ 
   var negX=sX-16,nb='<line x1="'+negX+'" y1="'+topY+'" x2="'+negX+'" y2="'+botY+'" stroke="'+BLUE+'" stroke-width="3"/>';
   for(var r=0;r<P;r++){
     var y=sY+r*(cH+gY)+cH/2;
     nb+='<line x1="'+negX+'" y1="'+y+'" x2="'+sX+'" y2="'+y+'" stroke="'+BLUE+'" stroke-width="2"/>';
   }
-
+ 
   var sense="";
   for(var r=0;r<P;r++){
     var y=sY+r*(cH+gY)+cH/2+12;
     sense+='<line x1="'+(sX+S*(cW+gX)/2)+'" y1="'+y+'" x2="'+bmsX+'" y2="'+(midY+15)+'" stroke="#eab308" stroke-width="0.7" stroke-dasharray="3,2" opacity="0.4"/>';
   }
-
+ 
   var ly=svgH-legH+4;
   var leg='<line x1="'+sX+'" y1="'+(ly-6)+'" x2="'+(svgW-20)+'" y2="'+(ly-6)+'" stroke="#ECEAE6" stroke-width="1"/>'+
     '<text x="'+sX+'" y="'+(ly+6)+'" font-size="11" font-weight="700" fill="#5C5C5C" font-family="DM Sans,sans-serif">LEGENDA</text>';
@@ -399,7 +408,7 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
     if(item.type==="box") leg+='<rect x="'+ix+'" y="'+(iy-6)+'" width="18" height="12" rx="3" fill="'+item.fill+'" stroke="'+item.color+'" stroke-width="1.5"/>';
     leg+='<text x="'+(ix+24)+'" y="'+(iy+4)+'" font-size="11" fill="#5C5C5C" font-family="DM Sans,sans-serif">'+item.label+'</text>';
   });
-
+ 
   var svg='<svg id="wsvg" width="100%" viewBox="0 0 '+svgW+' '+svgH+'" '+
     'style="max-width:'+Math.max(svgW,500)+'px;display:block;margin:0 auto;user-select:none" '+
     'data-abx="'+abX+'" data-afx="'+afX+'">'+
@@ -434,16 +443,16 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
       S+'S'+P+'P \u00b7 '+sysV+'V \u00b7 '+totalA+'A \u00b7 '+sFuse+'A/string \u00b7 '+mFuse+'A hoofd'+
     '</text>'+
     '</svg>';
-
+ 
   document.getElementById("diagram").innerHTML=svg;
   var wsvg=document.getElementById("wsvg");
   wsvg.addEventListener("pointermove",handleMove,{passive:false});
   wsvg.addEventListener("pointerup",function(){dragging=null;});
   window.addEventListener("pointerup",function(){dragging=null;});
 }
-
+ 
 function startDrag(e,target){e.preventDefault();dragging=target;}
-
+ 
 function handleMove(e){
   if(!dragging)return;
   var svg=document.getElementById("wsvg");if(!svg)return;
@@ -459,7 +468,7 @@ function handleMove(e){
     update();
   }
 }
-
+ 
 function doExport(){
   var c=window._C;if(!c)return;
   var svgEl=document.getElementById("wsvg");
@@ -504,7 +513,7 @@ function doExport(){
   win.document.close();
   setTimeout(function(){win.print();},300);
 }
-
+ 
 function buildMail(){
   var bedrijf=document.getElementById("qBedrijf").value||"[bedrijfsnaam]";
   var naam=document.getElementById("qNaam").value||"[naam]";
@@ -521,8 +530,71 @@ function buildMail(){
   document.getElementById("qLink").href="mailto:info@greenspark.nl?subject="+subject+"&body="+encodeURIComponent(body);
   return true;
 }
-
+ 
+ 
+function renderInkoop(){
+  var c=window._C;if(!c)return;
+  var batt=c.batt,S=c.S,P=c.P,sysV=c.sysV;
+  var nBatt=S*P;
+  // Kabeldiameters nodig
+  var perStr=[{run:"Busbar\u2192BMS",amps:c.stringA,len:c.distBMS,cable:c.cStr,color:"rood",qty:P}];
+  var main=[{run:"BMS\u2192Last",amps:c.totalA,len:c.distLoad,cable:c.cMain,color:"groen",qty:1}];
+  // Negatief zelfde diameter, blauw
+  var neg={run:"Busbar\u2192BMS (negatief)",amps:c.stringA,len:c.distBMS,cable:c.cStr,color:"blauw",qty:P};
+  var negMain={run:"BMS\u2192Last (negatief)",amps:c.totalA,len:c.distLoad,cable:c.cMain,color:"blauw",qty:1};
+  var allCables=[perStr[0],neg,main[0],negMain];
+ 
+  // Groepeer op mm2
+  var grouped={};
+  allCables.forEach(function(r){
+    var key=r.cable.mm2;
+    if(!grouped[key])grouped[key]={mm2:key,awg:r.cable.awg,items:[]};
+    grouped[key].items.push(r);
+  });
+ 
+  var fuseRows="";
+  // Per string zekering
+  fuseRows+="<tr><td>Zekering "+c.sFuse+"A (per string)</td><td style='font-weight:700;color:#f59e0b'>"+c.sFuse+"A</td><td>"+P+"&times;</td><td>IEC 60269 klasse gG</td></tr>";
+  // Hoofdzekering
+  fuseRows+="<tr><td>Hoofdzekering</td><td style='font-weight:700;color:#f59e0b'>"+c.mFuse+"A</td><td>1&times;</td><td>IEC 60269 klasse gG</td></tr>";
+ 
+  var cableRows="";
+  var mm2keys=Object.keys(grouped).sort(function(a,b){return +a-+b;});
+  mm2keys.forEach(function(k){
+    var g=grouped[k];
+    var totalLen=0,colorSet={};
+    g.items.forEach(function(it){
+      totalLen+=it.len*it.qty*2; // x2 voor heen+terug
+      colorSet[it.color]=true;
+    });
+    totalLen=Math.ceil(totalLen*1.1); // 10% marge
+    var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
+    var colors=Object.keys(colorSet).join(" / ");
+    cableRows+="<tr>"+
+      "<td style='font-weight:700;font-family:DM Mono,monospace'>"+mm2lbl+"</td>"+
+      "<td>"+totalLen+"m</td>"+
+      "<td>"+colors+"</td>"+
+      "<td style='color:var(--text-muted);font-size:12px'>"+g.items.map(function(it){return it.run+" ("+it.len+"m &times;"+it.qty+")";}).join("; ")+"</td>"+
+    "</tr>";
+  });
+ 
+  var html2="<h3 style='font-size:15px;font-weight:800;margin-bottom:1rem;color:var(--primary)'>Inkooplijst &mdash; "+S+"S"+P+"P "+batt.label+"</h3>"+
+    "<p style='font-size:12px;color:var(--text-muted);margin-bottom:1rem;font-family:DM Mono,monospace'>"+
+    "Kabellengte incl. 10% marge &middot; bedradingsschema "+sysV+"V &middot; "+c.tempC+"\u00b0C</p>"+
+    "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Accu's</h4>"+
+    "<table class='ctbl'><thead><tr><th>Model</th><th>Aantal</th><th>Spanning</th><th>Capaciteit</th></tr></thead><tbody>"+
+    "<tr><td style='font-weight:700'>"+batt.label+"</td><td style='font-weight:800;color:var(--accent)'>"+nBatt+"&times;</td><td>"+batt.nomV+"V nom.</td><td>"+batt.ah+"Ah</td></tr>"+
+    "</tbody></table>"+
+    "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Kabel (heen+terug, +10% marge)</h4>"+
+    "<table class='ctbl'><thead><tr><th>Doorsnede</th><th>Totale lengte</th><th>Kleur(en)</th><th>Gebruik</th></tr></thead><tbody>"+cableRows+"</tbody></table>"+
+    "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Zekeringen</h4>"+
+    "<table class='ctbl'><thead><tr><th>Type</th><th>Amperage</th><th>Aantal</th><th>Norm</th></tr></thead><tbody>"+fuseRows+"</tbody></table>"+
+    "<p style='margin-top:.75rem;font-size:11px;color:var(--text-muted);font-family:DM Mono,monospace'>Prijzen indicatief. Controleer altijd de actuele specs bij uw leverancier.</p>";
+  document.getElementById("inkoop").innerHTML=html2;
+}
+ 
 window.onload=init;
 </script>
 </body>
 </html>
+ 
