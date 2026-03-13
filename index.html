@@ -179,7 +179,7 @@ function calcCable(amps,lenM,temp,refV,maxPct){
 }
 function fuseSize(a){return Math.ceil(a*1.25/5)*5;}
 function fmtDist(m){return units==="imperial"?(m*3.28084).toFixed(1)+"ft":m+"m";}
-function fmtMM2(c){return c.mm2+"mm\u00b2";}
+function fmtMM2(c){return units==="imperial"?"AWG "+c.awg:c.mm2+"mm\u00b2";}
  
 function init(){
   var sel=document.getElementById("battSel");
@@ -274,7 +274,7 @@ function update(){
   var cTbl=document.getElementById("cableTbl");
   var tblWrap=cTbl.closest("table");
   if(units==="metric")tblWrap.classList.add("awg-hidden");
-  else tblWrap.classList.remove("awg-hidden");
+  else tblWrap.classList.add("awg-hidden"); // Doorsnede toont AWG in imperial
   cTbl.innerHTML=rows.map(function(r){
     var ok=r.cable.dropPct<=maxDrop;
     var rc=r.cable.reason==="ampacity"?"var(--red)":r.cable.reason==="drop"?"var(--amber)":"var(--accent)";
@@ -567,7 +567,7 @@ function renderInkoop(){
     var g=grouped[k];
     var totalRawLen=0;
     g.items.forEach(function(it){
-      totalRawLen+=it.len*it.qty*2; // heen + terug
+      totalRawLen+=it.len*it.qty; // rood en blauw zijn aparte rijen, geen ×2
     });
     var totalLen=Math.ceil(totalRawLen*1.1); // +10% marge
     var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
@@ -589,12 +589,12 @@ function renderInkoop(){
  
   var html2=
     "<h3 style='font-size:15px;font-weight:800;margin-bottom:1rem;color:var(--primary)'>Inkooplijst &mdash; "+S+"S"+P+"P "+batt.label+"</h3>"+
-    "<p style='font-size:12px;color:var(--text-muted);margin-bottom:1rem;font-family:DM Mono,monospace'>Kabellengte incl. 10% marge &middot; bedradingsschema "+sysV+"V &middot; "+c.tempC+"\u00b0C</p>"+
+    "<p style='font-size:12px;color:var(--text-muted);margin-bottom:1rem;font-family:DM Mono,monospace'>Kabellengte incl. 10% marge &middot; rood = positief, blauw = negatief &middot; "+sysV+"V &middot; "+c.tempC+"\u00b0C</p>"+
     "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Accu's</h4>"+
     "<table class='ctbl'><thead><tr><th>Model</th><th>Aantal</th><th>Spanning</th><th>Capaciteit</th></tr></thead><tbody>"+
     "<tr><td style='font-weight:700'>"+batt.label+"</td><td style='font-weight:800;color:var(--accent)'>"+nBatt+"&times;</td><td>"+batt.nomV+"V nom.</td><td>"+batt.ah+"Ah</td></tr>"+
     "</tbody></table>"+
-    "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Kabel (heen+terug, +10% marge)</h4>"+
+    "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Kabel (+10% marge)</h4>"+
     "<table class='ctbl'><thead><tr><th>Doorsnede</th><th>Totale lengte</th><th>Kleur</th><th>Gebruik</th></tr></thead><tbody>"+cableRows+"</tbody></table>"+
     "<h4 style='font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:.75rem 0 .4rem;font-family:DM Mono,monospace'>Zekeringen</h4>"+
     "<table class='ctbl'><thead><tr><th>Type</th><th>Amperage</th><th>Aantal</th><th>Norm</th></tr></thead><tbody>"+fuseRows+"</tbody></table>"+
