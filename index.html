@@ -686,7 +686,10 @@ Bedrijf: ${bedrijf}
 Contactpersoon: ${naam}
 Telefoon: ${tel||"—"}
 
-${opmerking?`Opmerkingen:\n${opmerking}\n\n`:""}Met vriendelijke groet,
+${opmerking ? ("Opmerkingen:
+"+opmerking+"
+
+") : ""}Met vriendelijke groet,Opmerkingen:\n${opmerking}\n\n`:""}Met vriendelijke groet,
 ${naam}
 ${bedrijf}`);
   document.getElementById("quoteMailto").href=`mailto:info@greenspark.nl?subject=${subject}&body=${body}`;
