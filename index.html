@@ -588,7 +588,8 @@ function renderInkoop(){
     var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
     var dot="<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+COLOR_DOT[g.color]+";margin-right:5px;vertical-align:middle'></span>";
     var gebruik=g.items.map(function(it){
-      return it.label+" ("+fmtDist(it.len)+")";
+      var qtyLbl=it.qty>1?" × "+it.qty+"":"";
+      return it.label+" ("+fmtDist(it.len)+qtyLbl+")";
     }).join("; ");
     cableRows+="<tr>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+mm2lbl+"</td>"+
