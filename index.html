@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -539,10 +539,10 @@ function renderInkoop(){
  
   // Definieer alle kabelruns als losse entries — rood en blauw altijd gescheiden
   var runs=[
-    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:P,  note:"per string"},
-    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:P,  note:"per string"},
-    {label:"BMS \u2192 Last",     color:"rood",  cable:c.cMain, len:c.distLoad, qty:1,  note:"hoofd"},
-    {label:"BMS \u2192 Last",     color:"blauw", cable:c.cMain, len:c.distLoad, qty:1,  note:"hoofd"}
+    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:1, note:"hoofd"},
+    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:1, note:"hoofd"},
+    {label:"BMS \u2192 Last",     color:"rood",  cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"},
+    {label:"BMS \u2192 Last",     color:"blauw", cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"}
   ];
  
   // Groepeer op mm2 + kleur (zodat zelfde diameter maar andere kleur een eigen rij krijgt)
@@ -573,7 +573,7 @@ function renderInkoop(){
     var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
     var dot="<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+COLOR_DOT[g.color]+";margin-right:5px;vertical-align:middle'></span>";
     var gebruik=g.items.map(function(it){
-      return it.label+" ("+fmtDist(it.len)+" \u00d7"+it.qty+")";
+      return it.label+" ("+fmtDist(it.len)+")";
     }).join("; ");
     cableRows+="<tr>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+mm2lbl+"</td>"+
