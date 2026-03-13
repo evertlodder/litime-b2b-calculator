@@ -211,6 +211,11 @@ function init(){
     document.getElementById("dropBtns").appendChild(b);
   });
   document.getElementById("tempSlider").oninput=function(){tempC=+this.value;update();};
+  // Drag listeners eenmalig op stabiele container — nooit herhalen in drawDiagram
+  var diagramEl=document.getElementById("diagram");
+  diagramEl.addEventListener("pointermove",function(e){handleMove(e);},{passive:false});
+  diagramEl.addEventListener("pointerup",function(){dragging=null;});
+  window.addEventListener("pointerup",function(){dragging=null;});
   update();
 }
 
@@ -449,10 +454,6 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
     '</svg>';
 
   document.getElementById("diagram").innerHTML=svg;
-  var wsvg=document.getElementById("wsvg");
-  wsvg.addEventListener("pointermove",handleMove,{passive:false});
-  wsvg.addEventListener("pointerup",function(){dragging=null;});
-  window.addEventListener("pointerup",function(){dragging=null;});
 }
 
 function startDrag(e,target){e.preventDefault();dragging=target;}
