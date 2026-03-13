@@ -89,7 +89,7 @@ input[type=text],input[type=email],input[type=tel],textarea{width:100%;padding:9
       </div>
       <div>
         <label class="lbl">Eenheden</label>
-        <div class="bg">
+        <div class="bg" id="unitsBtns">
           <button class="btn ap" onclick="setUnits('metric',this)">Metrisch</button>
           <button class="btn" onclick="setUnits('imperial',this)">Imperial</button>
         </div>
@@ -181,6 +181,14 @@ function fuseSize(a){return Math.ceil(a*1.25/5)*5;}
 function fmtDist(m){return units==="imperial"?(m*3.28084).toFixed(1)+"ft":m+"m";}
 function fmtMM2(c){return units==="imperial"?"AWG "+c.awg:c.mm2+"mm\u00b2";}
 
+function updateSBtnLabels(){
+  var batt=CATALOG.find(function(b){return b.id===battId;})||CATALOG[0];
+  document.querySelectorAll("#sBtns .btn").forEach(function(btn,i){
+    var n=i+1;
+    btn.innerHTML=n+"S<span class='bs'>"+(+(n*batt.nomV).toFixed(1))+"V</span>";
+  });
+}
+
 function init(){
   var sel=document.getElementById("battSel");
   CATALOG.forEach(function(b){
@@ -188,7 +196,7 @@ function init(){
     o.value=b.id;o.textContent=b.label+" \u2014 \u20ac"+b.price;
     sel.appendChild(o);
   });
-  sel.onchange=function(){battId=this.value;update();};
+  sel.onchange=function(){battId=this.value;updateSBtnLabels();update();};
   [1,2,3,4].forEach(function(n){
     var b=document.createElement("button");
     b.className="btn"+(n===1?" aa":"");
@@ -221,7 +229,7 @@ function init(){
 
 function setUnits(u,el){
   units=u;
-  document.querySelectorAll(".bg:last-child .btn").forEach(function(x){x.className="btn";});
+  document.querySelectorAll("#unitsBtns .btn").forEach(function(x){x.className="btn";});
   if(el)el.className="btn ap";
   update();
 }
@@ -235,6 +243,7 @@ function setTab(i,el){
 }
 
 function update(){
+  updateSBtnLabels();
   var batt=CATALOG.find(function(b){return b.id===battId;})||CATALOG[0];
   var sysV=+(S*batt.nomV).toFixed(1);
   var stringA=batt.bmsA,totalA=stringA*P;
@@ -242,11 +251,11 @@ function update(){
   var totalKwh=((sysV*totalAh)/1000).toFixed(2);
   var totalPrice=batt.price*S*P;
   var sFuse=fuseSize(stringA),mFuse=fuseSize(totalA);
-  // Verdeel drop-budget proportioneel op basis van kabellengte
+  // Busbar→BMS: stroom per string (stringA), BMS→Last: gecombineerde stroom (totalA)
   var totalLen=distBMS+distLoad;
   var dropBMS=totalLen>0?maxDrop*(distBMS/totalLen):maxDrop/2;
   var dropLoad=totalLen>0?maxDrop*(distLoad/totalLen):maxDrop/2;
-  var cStr=calcCable(totalA,distBMS,tempC,sysV,dropBMS);
+  var cStr=calcCable(stringA,distBMS,tempC,sysV,dropBMS);
   var cMain=calcCable(totalA,distLoad,tempC,sysV,dropLoad);
   var totDV=+(cStr.dropV+cMain.dropV).toFixed(3);
   var totDP=+((totDV/sysV)*100).toFixed(2);
@@ -282,8 +291,8 @@ function update(){
   ];
   var cTbl=document.getElementById("cableTbl");
   var tblWrap=cTbl.closest("table");
-  if(units==="metric")tblWrap.classList.add("awg-hidden");
-  else tblWrap.classList.add("awg-hidden"); // Doorsnede toont AWG in imperial
+  if(units==="metric"){tblWrap.classList.add("awg-hidden");}
+  else{tblWrap.classList.remove("awg-hidden");}
   cTbl.innerHTML=rows.map(function(r){
     var ok=r.cable.dropPct<=maxDrop;
     var rc=r.cable.reason==="ampacity"?"var(--red)":r.cable.reason==="drop"?"var(--amber)":"var(--accent)";
@@ -430,7 +439,7 @@ function drawDiagram(S,P,sysV,totalA,stringA,sFuse,mFuse,cStr,cMain,batt){
     '<g style="cursor:grab" onpointerdown="startDrag(event,\'bms\')" ontouchstart="startDrag(event,\'bms\')">'+
       '<rect x="'+bmsX+'" y="'+(midY-22)+'" width="'+bmsW+'" height="44" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" filter="url(#sh)"/>'+
       '<text x="'+(bmsX+bmsW/2)+'" y="'+(midY-5)+'" text-anchor="middle" font-size="13" font-weight="800" fill="#1A1A1A" font-family="DM Sans,sans-serif">BMS</text>'+
-      '<text x="'+(bmsX+bmsW/2)+'" y="'+(midY+11)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">'+totalA+'A max</text>'+
+      '<text x="'+(bmsX+bmsW/2)+'" y="'+(midY+11)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#8C8C8C" font-family="DM Mono,monospace">'+stringA+'A/str</text>'+
       '<rect x="'+(bmsX+2)+'" y="'+(midY-5)+'" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>'+
       '<rect x="'+(bmsX+bmsW-6)+'" y="'+(midY-5)+'" width="4" height="10" rx="1" fill="#cbd5e1" opacity="0.7"/>'+
       '<text x="'+(bmsX+bmsW/2)+'" y="'+(midY+36)+'" text-anchor="middle" font-size="10" fill="#8C8C8C" font-family="DM Sans,sans-serif">\u25c4 sleep \u25ba</text>'+
@@ -507,8 +516,8 @@ function doExport(){
     '</div>'+
     '<div class="diagram">'+svgHTML+'</div>'+
     '<table><tr><th>Verbinding</th><th>Stroom</th><th>mm\u00b2</th><th>AWG</th><th>Val</th><th>Status</th><th>Zekering</th></tr>'+
-    '<tr><td>Busbar \u2192 BMS ('+c.distBMS+'m)</td><td><strong>'+c.cStr.amps+'A</strong></td><td><strong>'+c.cStr.mm2+'</strong></td><td>AWG '+c.cStr.awg+'</td><td>'+c.cStr.dropV+'V ('+c.cStr.dropPct+'%)</td><td><span class="'+(c.cStr.dropPct<=c.maxDrop?"ok":"bad")+'">'+(c.cStr.dropPct<=c.maxDrop?"OK":"CHECK")+'</span></td><td>'+c.sFuse+'A</td></tr>'+
-    '<tr><td>BMS \u2192 Last ('+c.distLoad+'m)</td><td><strong>'+c.cMain.amps+'A</strong></td><td><strong>'+c.cMain.mm2+'</strong></td><td>AWG '+c.cMain.awg+'</td><td>'+c.cMain.dropV+'V ('+c.cMain.dropPct+'%)</td><td><span class="'+(c.cMain.dropPct<=c.maxDrop?"ok":"bad")+'">'+(c.cMain.dropPct<=c.maxDrop?"OK":"CHECK")+'</span></td><td>'+c.mFuse+'A</td></tr>'+
+    '<tr><td>Busbar \u2192 BMS ('+c.distBMS+'m)</td><td><strong>'+c.cStr.amps+'A</strong></td><td><strong>'+c.cStr.mm2+'</strong></td><td>AWG '+c.cStr.awg+'</td><td>'+c.cStr.dropV+'V ('+c.cStr.dropPct+'%)</td><td>—</td><td>'+c.sFuse+'A</td></tr>'+
+    '<tr><td>BMS \u2192 Last ('+c.distLoad+'m)</td><td><strong>'+c.cMain.amps+'A</strong></td><td><strong>'+c.cMain.mm2+'</strong></td><td>AWG '+c.cMain.awg+'</td><td>'+c.cMain.dropV+'V ('+c.cMain.dropPct+'%)</td><td>—</td><td>'+c.mFuse+'A</td></tr>'+
     '</table>'+
     '<p style="padding:.6rem 1rem;background:'+(c.dropOk?"#E8F5EC":"#fef2f2")+';border-radius:6px;font-weight:700;color:'+(c.dropOk?"#1D8348":"#991b1b")+'">'+
       'Totaal kabelverlies: '+c.totDV+'V ('+c.totDP+'%) \u2014 max '+c.maxDrop+'%: '+(c.dropOk?'\u2713 OK':'\u2717 TE HOOG')+
@@ -544,8 +553,8 @@ function renderInkoop(){
 
   // Definieer alle kabelruns als losse entries — rood en blauw altijd gescheiden
   var runs=[
-    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:1, note:"hoofd"},
-    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:1, note:"hoofd"},
+    {label:"Busbar \u2192 BMS",   color:"rood",  cable:c.cStr,  len:c.distBMS,  qty:P, note:"per string"},
+    {label:"Busbar \u2192 BMS",   color:"blauw", cable:c.cStr,  len:c.distBMS,  qty:P, note:"per string"},
     {label:"BMS \u2192 Last",     color:"rood",  cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"},
     {label:"BMS \u2192 Last",     color:"blauw", cable:c.cMain, len:c.distLoad, qty:1, note:"hoofd"}
   ];
@@ -575,6 +584,7 @@ function renderInkoop(){
       totalRawLen+=it.len*it.qty; // rood en blauw zijn aparte rijen, geen ×2
     });
     var totalLen=Math.ceil(totalRawLen*1.1); // +10% marge
+    var totalLenLbl=units==="imperial"?+(totalLen*3.28084).toFixed(1)+"ft":totalLen+"m";
     var mm2lbl=units==="imperial"?"AWG "+g.awg:g.mm2+"mm\u00b2";
     var dot="<span style='display:inline-block;width:10px;height:10px;border-radius:50%;background:"+COLOR_DOT[g.color]+";margin-right:5px;vertical-align:middle'></span>";
     var gebruik=g.items.map(function(it){
@@ -582,7 +592,7 @@ function renderInkoop(){
     }).join("; ");
     cableRows+="<tr>"+
       "<td style='font-weight:700;font-family:DM Mono,monospace'>"+mm2lbl+"</td>"+
-      "<td style='font-family:DM Mono,monospace'>"+totalLen+"m</td>"+
+      "<td style='font-family:DM Mono,monospace'>"+totalLenLbl+"</td>"+
       "<td>"+dot+g.color+"</td>"+
       "<td style='color:var(--text-muted);font-size:12px'>"+gebruik+"</td>"+
     "</tr>";
